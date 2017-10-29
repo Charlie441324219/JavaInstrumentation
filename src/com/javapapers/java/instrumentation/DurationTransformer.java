@@ -16,9 +16,6 @@ public class DurationTransformer implements ClassFileTransformer {
 							byte[] classfileBuffer) throws IllegalClassFormatException {
 		byte[] byteCode = classfileBuffer;
 
-		// since this transformer will be called when all the classes are
-		// loaded by the classloader, we are restricting the instrumentation
-		// using if block only for the Lion class
 		if (className.equals("com/javapapers/java/instrumentation/Student")) {
 			System.out.println("Instrumenting......");
 			try {
