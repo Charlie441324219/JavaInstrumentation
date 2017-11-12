@@ -4,9 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.List;
-
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -25,28 +22,22 @@ public class DurationTransformer implements ClassFileTransformer {
 				ClassPool classPool = ClassPool.getDefault();
 				CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(
 						classfileBuffer));
-
-//				count total line number in class
-				String classString = ctClass.toString();
-                int counter = 0;
-                for( int i=0; i<classString.length(); i++ ) {
-                    if( classString.charAt(i) == ';' ) {
-                        counter++;
-                    }
-                }
-
 				CtMethod[] methods = ctClass.getDeclaredMethods();
+
 				for (CtMethod method : methods) {
+				    //insert variable
                     method.addLocalVariable("tempLineNumber", CtClass.intType);
+                    //insert code before origin code
 				    method.insertBefore("tempLineNumber = 0;System.out.println(\"========\");");
-				    for(int i =1; i <=16 ; i++) {
+				    //insert code in each line of origin code
+				    for(int i =1; i <=byteCode.length ; i++) {
                         method.insertAt(i, "if(Thread.currentThread().getStackTrace()[1].getLineNumber() != tempLineNumber)" +
                                 "{" +
                                 "System.out.println(\"execute code in line number :  \" + Thread.currentThread().getStackTrace()[1].getLineNumber());" +
                                 "tempLineNumber = Thread.currentThread().getStackTrace()[1].getLineNumber();" +
                                 "}");
                     }
-					//method.insertAt(11,"System.out.println(\"when x <= 10 execute line \" + Thread.currentThread().getStackTrace()[1].getLineNumber());");;
+                    //insert code after origin code
                     method.insertAfter("System.out.println(\"========\" + \"\\n\");");
 				}
 				byteCode = ctClass.toBytecode();
